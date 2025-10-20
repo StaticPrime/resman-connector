@@ -1,0 +1,41 @@
+# Source files
+src/
+*.ts
+!*.d.ts
+
+# Config files
+tsconfig.json
+.eslintrc.json
+.prettierrc.json
+.prettierignore
+
+# Development files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+coverage/
+.nyc_output/
+**/*.test.ts
+**/*.spec.ts
+
+# CI/CD
+.github/
+
+# Git
+.git/
+.gitignore
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Build artifacts
+*.tsbuildinfo
+
