@@ -58,7 +58,7 @@ export class WorkOrdersModules {
     }
     const oneYearAgo = new Date();
     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-    if (modifiedSince && modifiedSince < oneYearAgo) {
+    if (modifiedSince && modifiedSince > oneYearAgo) {
       return createErrorResponse(new Error('Modified since date cannot be more than one year ago'));
     }
     const errorResponse = validateStartAndEndDate(startDate, endDate);
