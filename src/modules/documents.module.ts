@@ -88,7 +88,7 @@ export class DocumentsModules {
       .post<null>('/Documents', {
         propertyId,
         type,
-        id: typeId,
+        Id: typeId,
         fileName,
         url,
         showInResidentPortal,
