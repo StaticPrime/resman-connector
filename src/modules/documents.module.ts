@@ -84,14 +84,21 @@ export class DocumentsModules {
     url: string;
     showInResidentPortal: boolean;
   }): Promise<TApiResponse<null>> {
+    // Convert data to URLSearchParams for form-encoded request
+    const formData = new URLSearchParams({
+      propertyId,
+      type,
+      Id: typeId,
+      fileName,
+      url,
+      showInResidentPortal: showInResidentPortal.toString(),
+    });
+
     return this.connector
-      .post<null>('/Documents', {
-        propertyId,
-        type,
-        Id: typeId,
-        fileName,
-        url,
-        showInResidentPortal,
+      .post<null>('/Documents', formData as unknown as Record<string, unknown>, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
       })
       .then(() => createSuccessResponse(null))
       .catch((error) => createErrorResponse(error));
