@@ -59,7 +59,7 @@ export class WorkOrdersModules {
       return createErrorResponse(new Error('Modified since must be in the past'));
     }
     const oneYearAgo = new Date();
-    oneYearAgo.setDate(oneYearAgo.getDate() - 366);
+    oneYearAgo.setDate(oneYearAgo.getDate() - 364);
     if (modifiedSince && modifiedSince < oneYearAgo) {
       return createErrorResponse(new Error('Modified since date cannot be more than one year ago'));
     }
