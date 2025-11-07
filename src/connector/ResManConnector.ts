@@ -50,12 +50,13 @@ export class ResManConnector {
             error.response.data?.code,
             error.response.data
           );
-        } else if (error.request) {
-          // The request was made but no response was received
-          throw new ResManApiError('No response received from server', undefined, 'NO_RESPONSE');
         } else {
-          // Something happened in setting up the request that triggered an Error
-          throw new ResManApiError(error.message, undefined, 'REQUEST_ERROR');
+          // Unknown ResMan Error
+          throw new ResManApiError(
+            `Unknown ResMan Error: ${JSON.stringify(error)}`,
+            undefined,
+            'UNKNOWN_ERROR'
+          );
         }
       }
     );
