@@ -1,6 +1,6 @@
 {
   "name": "resman-connector",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "NodeJS Connector for ResMan API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
