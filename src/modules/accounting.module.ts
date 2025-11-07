@@ -177,8 +177,15 @@ export class AccountingModules {
     personId?: string;
     accountTypes?: BillingAccountType[];
   }): Promise<TApiResponse<TBillingAccountResponse[]>> {
-    if (modifiedSince > new Date()) {
-      return createErrorResponse(new Error('modifiedSince cannot be in the future.'));
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    if (modifiedSince && modifiedSince > startOfDay) {
+      return createErrorResponse(new Error('Modified since must be in the past'));
+    }
+    const oneYearAgo = new Date();
+    oneYearAgo.setDate(oneYearAgo.getDate() - 366);
+    if (modifiedSince && modifiedSince < oneYearAgo) {
+      return createErrorResponse(new Error('Modified since date cannot be more than one year ago'));
     }
 
     return this.connector
