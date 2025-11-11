@@ -179,7 +179,7 @@ export type {
 } from './types';
 
 // Export errors
-export { ResManApiError, ResManConfigError } from './errors';
+export { ResManApiError, ResManConfigError, ResManNoResponseError } from './errors';
 
 // Default export
 export { ResManClient as default } from './connector';

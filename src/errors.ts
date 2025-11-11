@@ -33,3 +33,20 @@ export class ResManConfigError extends Error {
     }
   }
 }
+
+/**
+ * Custom error class for no response/timeout errors
+ */
+export class ResManNoResponseError extends Error {
+  public readonly attempts: number;
+
+  constructor(message: string, attempts: number) {
+    super(message);
+    this.name = 'ResManNoResponseError';
+    this.attempts = attempts;
+
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, ResManNoResponseError);
+    }
+  }
+}

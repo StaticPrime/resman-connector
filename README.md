@@ -23,6 +23,7 @@ yarn add resman-connector
 - 🚀 Simple and intuitive API
 - 📘 Full TypeScript support with type definitions
 - 🛡️ Built-in error handling
+- 🔁 Automatic retry mechanism with progressive delays for timeouts
 - ⚡ Promise-based (async/await)
 - 🔄 Automatic request/response interceptors
 - 🎯 Supports all HTTP methods (GET, POST, PUT, PATCH, DELETE)
@@ -168,12 +169,36 @@ try {
 }
 ```
 
+### Automatic Retry with Circuit Breaker
+
+The connector includes built-in retry logic to handle API timeouts and rate limiting:
+
+- **Attempt 1**: Immediate request
+- **Attempt 2**: Immediate retry if first attempt fails
+- **Attempt 3**: Retry after 15-second delay
+- **Attempt 4**: Retry after additional 15-second delay (30 seconds total)
+
+If all 4 attempts fail due to timeout or network errors, a `ResManNoResponseError` is thrown. The retry mechanism **only applies to timeout and network errors**. API errors with status codes (4xx, 5xx) are returned immediately without retries.
+
+```typescript
+const response = await client.properties.getProperties();
+
+if (response.error) {
+  if (response.error instanceof ResManNoResponseError) {
+    console.error(`Failed after ${response.error.attempts} attempts:`, response.error.message);
+  } else {
+    console.error('API Error:', response.error);
+  }
+}
+```
+
 ### Error Types
 
-| Error Type          | When It Occurs                       | How to Handle          |
-| ------------------- | ------------------------------------ | ---------------------- |
-| `ResManApiError`    | API request fails (network, 4xx/5xx) | Check `response.error` |
-| `ResManConfigError` | Invalid configuration at init        | Use try/catch block    |
+| Error Type              | When It Occurs                            | How to Handle          |
+| ----------------------- | ----------------------------------------- | ---------------------- |
+| `ResManApiError`        | API returns error status (4xx/5xx)        | Check `response.error` |
+| `ResManNoResponseError` | All retry attempts fail (timeout/network) | Check `response.error` |
+| `ResManConfigError`     | Invalid configuration at init             | Use try/catch block    |
 
 ## Advanced Usage
 

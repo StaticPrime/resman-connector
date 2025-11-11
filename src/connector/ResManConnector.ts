@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { TResManConfig, TRequestOptions } from '../types/resmanConnector.type';
-import { ResManApiError, ResManConfigError } from '../errors';
+import { ResManApiError, ResManConfigError, ResManNoResponseError } from '../errors';
 
 /**
  * ResMan API Connector
@@ -81,32 +81,91 @@ export class ResManConnector {
   }
 
   /**
+   * Delays execution for a specified number of milliseconds
+   * @param ms Milliseconds to delay
+   */
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Executes a request with retry logic and progressive delays
+   * @param requestFn Function that makes the actual request
+   * @returns API response
+   */
+  private async executeWithRetry<T>(
+    requestFn: () => Promise<AxiosResponse<T>>
+  ): Promise<AxiosResponse<T>> {
+    const maxAttempts = 4;
+    const delays = [0, 0, 15000, 15000]; // Attempt 1: no delay, Attempt 2: no delay, Attempt 3: 15s, Attempt 4: 15s
+
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        // Add delay before attempt (except first attempt)
+        if (attempt > 0 && delays[attempt] > 0) {
+          await this.delay(delays[attempt]);
+        }
+
+        return await requestFn();
+      } catch (error) {
+        lastError = error as Error;
+
+        // If this is not a timeout/network error, throw immediately
+        if (error instanceof ResManApiError && error.statusCode) {
+          // This is a proper API response error (4xx, 5xx), not a timeout
+          throw error;
+        }
+
+        // If we've exhausted all attempts, throw NoResponseError
+        if (attempt === maxAttempts - 1) {
+          throw new ResManNoResponseError(
+            `Failed to get response from ResMan API after ${maxAttempts} attempts. Last error: ${lastError.message}`,
+            maxAttempts
+          );
+        }
+
+        // Continue to next attempt for timeout/network errors
+      }
+    }
+
+    // This should never be reached, but TypeScript needs it
+    throw new ResManNoResponseError(
+      `Failed to get response from ResMan API after ${maxAttempts} attempts`,
+      maxAttempts
+    );
+  }
+
+  /**
    * Makes a GET request to the API
    * @param endpoint API endpoint
    * @param options Request options
    * @returns API response
    */
   async get<T = unknown>(endpoint: string, options?: TRequestOptions): Promise<AxiosResponse<T>> {
-    if (options?.params && typeof options.params === 'object') {
-      for (const key of Object.keys(options.params)) {
-        if (options.params[key] === undefined || options.params[key] === null) {
-          delete options.params[key];
+    return this.executeWithRetry(async () => {
+      if (options?.params && typeof options.params === 'object') {
+        for (const key of Object.keys(options.params)) {
+          if (options.params[key] === undefined || options.params[key] === null) {
+            delete options.params[key];
+          }
         }
       }
-    }
-    if (options?.headers && typeof options.headers === 'object') {
-      for (const key of Object.keys(options.headers)) {
-        if (options.headers[key] === undefined || options.headers[key] === null) {
-          delete options.headers[key];
+      if (options?.headers && typeof options.headers === 'object') {
+        for (const key of Object.keys(options.headers)) {
+          if (options.headers[key] === undefined || options.headers[key] === null) {
+            delete options.headers[key];
+          }
         }
       }
-    }
-    const config: AxiosRequestConfig = {
-      params: options?.params,
-      headers: options?.headers,
-    };
+      const config: AxiosRequestConfig = {
+        params: options?.params,
+        headers: options?.headers,
+      };
 
-    return this.client.get(endpoint, config);
+      return this.client.get(endpoint, config);
+    });
   }
 
   /**
@@ -121,29 +180,31 @@ export class ResManConnector {
     data?: Record<string, unknown> | Record<string, unknown>[],
     options?: TRequestOptions
   ): Promise<AxiosResponse<T>> {
-    if (data && typeof data === 'object') {
-      if (Array.isArray(data)) {
-        for (const item of data) {
-          for (const key of Object.keys(item as Record<string, unknown>)) {
-            if (item[key] === undefined) {
-              delete item[key];
+    return this.executeWithRetry(async () => {
+      if (data && typeof data === 'object') {
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            for (const key of Object.keys(item as Record<string, unknown>)) {
+              if (item[key] === undefined) {
+                delete item[key];
+              }
+            }
+          }
+        } else {
+          for (const key of Object.keys(data)) {
+            if (data[key] === undefined) {
+              delete data[key];
             }
           }
         }
-      } else {
-        for (const key of Object.keys(data)) {
-          if (data[key] === undefined) {
-            delete data[key];
-          }
-        }
       }
-    }
-    const config: AxiosRequestConfig = {
-      params: options?.params,
-      headers: options?.headers,
-    };
+      const config: AxiosRequestConfig = {
+        params: options?.params,
+        headers: options?.headers,
+      };
 
-    return this.client.post(endpoint, data, config);
+      return this.client.post(endpoint, data, config);
+    });
   }
 
   /**
@@ -158,29 +219,31 @@ export class ResManConnector {
     data?: Record<string, unknown> | Record<string, unknown>[],
     options?: TRequestOptions
   ): Promise<AxiosResponse<T>> {
-    if (data && typeof data === 'object') {
-      if (Array.isArray(data)) {
-        for (const item of data) {
-          for (const key of Object.keys(item as Record<string, unknown>)) {
-            if (item[key] === undefined) {
-              delete item[key];
+    return this.executeWithRetry(async () => {
+      if (data && typeof data === 'object') {
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            for (const key of Object.keys(item as Record<string, unknown>)) {
+              if (item[key] === undefined) {
+                delete item[key];
+              }
+            }
+          }
+        } else {
+          for (const key of Object.keys(data)) {
+            if (data[key] === undefined) {
+              delete data[key];
             }
           }
         }
-      } else {
-        for (const key of Object.keys(data)) {
-          if (data[key] === undefined) {
-            delete data[key];
-          }
-        }
       }
-    }
-    const config: AxiosRequestConfig = {
-      params: options?.params,
-      headers: options?.headers,
-    };
+      const config: AxiosRequestConfig = {
+        params: options?.params,
+        headers: options?.headers,
+      };
 
-    return this.client.put(endpoint, data, config);
+      return this.client.put(endpoint, data, config);
+    });
   }
 
   /**
@@ -195,29 +258,31 @@ export class ResManConnector {
     data?: Record<string, unknown> | Record<string, unknown>[],
     options?: TRequestOptions
   ): Promise<AxiosResponse<T>> {
-    if (data && typeof data === 'object') {
-      if (Array.isArray(data)) {
-        for (const item of data) {
-          for (const key of Object.keys(item as Record<string, unknown>)) {
-            if (item[key] === undefined) {
-              delete item[key];
+    return this.executeWithRetry(async () => {
+      if (data && typeof data === 'object') {
+        if (Array.isArray(data)) {
+          for (const item of data) {
+            for (const key of Object.keys(item as Record<string, unknown>)) {
+              if (item[key] === undefined) {
+                delete item[key];
+              }
+            }
+          }
+        } else {
+          for (const key of Object.keys(data)) {
+            if (data[key] === undefined) {
+              delete data[key];
             }
           }
         }
-      } else {
-        for (const key of Object.keys(data)) {
-          if (data[key] === undefined) {
-            delete data[key];
-          }
-        }
       }
-    }
-    const config: AxiosRequestConfig = {
-      params: options?.params,
-      headers: options?.headers,
-    };
+      const config: AxiosRequestConfig = {
+        params: options?.params,
+        headers: options?.headers,
+      };
 
-    return this.client.patch(endpoint, data, config);
+      return this.client.patch(endpoint, data, config);
+    });
   }
 
   /**
