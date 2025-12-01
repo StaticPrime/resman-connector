@@ -88,7 +88,7 @@ export class AccountingModules {
     propertyId: string;
     startMonth: Date;
     endMonth: Date;
-    accountingBasis: AccountingBasis;
+    accountingBasis?: AccountingBasis;
   }): Promise<TApiResponse<TBalanceResponse[]>> {
     if (new Date(startMonth) > new Date(endMonth)) {
       return createErrorResponse(new Error('startMonth must be before endMonth'));
