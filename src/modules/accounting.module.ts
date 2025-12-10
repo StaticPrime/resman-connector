@@ -156,7 +156,6 @@ export class AccountingModules {
    * GET /BillingAccounts
    * @param propertyId The ID of the property
    * @param modifiedSince The modified since
-   * @param includeTransactions The include transactions
    * @param billingAccountId The ID of the billing account
    * @param personId The ID of the person
    * @param accountTypes The account types
@@ -165,14 +164,12 @@ export class AccountingModules {
   public async getBillingAccounts({
     propertyId,
     modifiedSince,
-    includeTransactions,
     billingAccountId,
     personId,
     accountTypes,
   }: {
     propertyId: string;
     modifiedSince: Date;
-    includeTransactions: boolean;
     billingAccountId?: string;
     personId?: string;
     accountTypes?: BillingAccountType[];
@@ -193,7 +190,7 @@ export class AccountingModules {
         params: {
           propertyId,
           modifiedSince: modifiedSince.toUTCString(),
-          includeTransactions,
+          includeTransactions: true,
           billingAccountId,
           personId,
           accountTypes: accountTypes ? accountTypes.join(',') : undefined,
