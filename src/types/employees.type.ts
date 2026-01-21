@@ -15,6 +15,6 @@ export type TEmployeeResponse = {
   isLeasing: boolean;
   isMaintenance: boolean;
   isCorporate: boolean;
-  terminateDate?: Date;
+  terminationDate?: Date;
   propertyIds?: string[];
 };

@@ -38,11 +38,11 @@ export class EmployeesModules {
           if (status) {
             if (status === EmployeeStatus.ACTIVE) {
               filteredEmployees = filteredEmployees.filter(
-                (employee) => employee.terminateDate === null
+                (employee) => employee.terminationDate === null
               );
             } else {
               filteredEmployees = filteredEmployees.filter(
-                (employee) => employee.terminateDate !== null
+                (employee) => employee.terminationDate !== null
               );
             }
           }
