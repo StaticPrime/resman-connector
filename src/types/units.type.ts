@@ -64,7 +64,7 @@ export enum UnitStatus {
 export type TApplicantLease = {
   billingAccountId: string;
   leaseId: string;
-  appliicationDate: Date;
+  applicationDate: Date;
   moveInDate?: Date;
 };
 
@@ -94,7 +94,7 @@ export type TUnitAvailabilityResponse = {
   unitTypeId: string;
   unitTypeName: string;
   unitTypeMarketingName?: string;
-  availableforOnlinemarketing: boolean;
+  availableForOnlinemarketing: boolean;
   buildingId?: string;
   buildingName?: string;
   streetAddress?: string;

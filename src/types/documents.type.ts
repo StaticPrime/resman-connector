@@ -7,7 +7,7 @@ export enum DocumentType {
 
 export type TSingleDocumentResponse = {
   documentId: string;
-  uir: string;
+  uri: string;
   uriExpiration: Date;
 };
 
