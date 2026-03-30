@@ -4,6 +4,7 @@ import {
   TApiResponse,
   DocumentType,
   TSingleDocumentResponse,
+  TAddDocumentLinkResponse,
 } from '../types';
 import { createSuccessResponse, createErrorResponse } from '../utils';
 
@@ -67,7 +68,7 @@ export class DocumentsModules {
    * @param fileName The name of the document
    * @param url The URL of the document
    * @param showInResidentPortal Whether to show the document in the resident portal
-   * @returns Null
+   * @returns The added document link
    */
   public async addDocumentLink({
     propertyId,
@@ -83,7 +84,7 @@ export class DocumentsModules {
     fileName: string;
     url: string;
     showInResidentPortal: boolean;
-  }): Promise<TApiResponse<null>> {
+  }): Promise<TApiResponse<TAddDocumentLinkResponse>> {
     // Convert data to URLSearchParams for form-encoded request
     const formData = new URLSearchParams({
       propertyId,
@@ -100,7 +101,12 @@ export class DocumentsModules {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       })
-      .then(() => createSuccessResponse(null))
+      .then((response) => {
+        if (response.data) {
+          return createSuccessResponse(response.data);
+        }
+        return createErrorResponse(new Error('Failed to add document link'));
+      })
       .catch((error) => createErrorResponse(error));
   }
 }

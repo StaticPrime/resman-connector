@@ -19,3 +19,12 @@ export type TMultipleDocumentResponse = {
   fileType: string;
   dateAttached: Date;
 };
+
+export type TAddDocumentLinkResponse = {
+  id: string;
+  type: DocumentType;
+  fileName: string;
+  url?: string;
+  documentId: string;
+  propertyId: string;
+};
