@@ -1,5 +1,6 @@
 export enum DocumentType {
   LEASE = 'Lease',
+  RESIDENT = 'Resident',
   WORK_ORDER = 'WorkOrder',
   UNIT = 'Unit',
   PROCESSOR_PAYMENT = 'ProcessorPayment',
