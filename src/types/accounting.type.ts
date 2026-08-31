@@ -18,13 +18,13 @@ export type TTransactionGLAccount = {
 
 export type TTransactionCategoryResponse = {
   transactionCategoryId: string;
-  abbreviation?: string;
+  abbreviation: string;
   name: string;
   type: TransactionCategoryType;
   isRent: boolean;
   isRecurringMonthlyRentConcession: boolean;
   isOneTimeConcession: boolean;
-  glAccount?: TTransactionGLAccount;
+  glAccount: TTransactionGLAccount;
 };
 
 export enum AccountingBasis {
@@ -53,9 +53,12 @@ export type TChartOfAccountResponse = {
   glAccountId: string;
   name: string;
   number: string;
-  description?: string;
+  description: string | null;
   type: GLAccountType;
-  parentGlAccountId?: string;
+  /**
+   * ResMan spells this `parentGLAccountId` on the wire. Null for top-level accounts.
+   */
+  parentGLAccountId: string | null;
 };
 
 export type TBalancePeriod = {
@@ -70,7 +73,11 @@ export type TBalanceResponse = {
   name: string;
   number: string;
   type: GLAccountType;
-  periods?: TBalancePeriod[];
+  /** Balance at the start of the requested range. */
+  startBalance: number;
+  /** Balance at the end of the requested range. */
+  endBalance: number;
+  periods: TBalancePeriod[];
 };
 
 export enum BillingAccountType {
@@ -84,11 +91,11 @@ export enum BillingAccountType {
 
 export type TBillingAccountTransaction = {
   id: string;
-  date: Date;
+  date: string;
   type: string;
-  transactionCategoryId?: string;
-  description?: string;
-  reference: string;
+  transactionCategoryId: string | null;
+  description: string;
+  reference: string | null;
   amount: number;
 };
 
@@ -98,28 +105,32 @@ export type TBillingAccountResponse = {
   billingAccountId: string;
   personId: string;
   firstName: string;
-  middleName?: string;
+  middleName: string | null;
   lastName: string;
-  building?: string;
+  building: string;
   unit: string;
-  streetAddress?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  email?: string;
-  mobilePhone?: string;
-  homePhone?: string;
-  householdStatus?: string;
-  moveInDate?: Date;
-  moveOutDate?: Date;
-  leaseId?: string;
-  leaseStatus?: string;
-  leaseSignedDate?: Date;
-  leaseStartDate?: Date;
-  leaseEndDate?: Date;
+  streetAddress: string;
+  city: string;
+  state: string;
+  zip: string;
+  email: string | null;
+  mobilePhone: string | null;
+  homePhone: string | null;
+  householdStatus: string | null;
+  moveInDate: string | null;
+  moveOutDate: string | null;
+  /**
+   * Normalised by this connector from ResMan's `leaseID` so it matches the
+   * `leaseId` spelling used everywhere else in this package.
+   */
+  leaseId: string | null;
+  leaseStatus: string;
+  leaseSignedDate: string | null;
+  leaseStartDate: string | null;
+  leaseEndDate: string | null;
   balance: number;
-  paymentStatus?: string;
-  transactions?: TBillingAccountTransaction[];
+  paymentStatus: string;
+  transactions: TBillingAccountTransaction[];
 };
 
 export enum BankAccountMethod {
@@ -141,10 +152,10 @@ export type TBankAccountPaymentPayable = {
   id: string;
   type: string;
   propertyId: string;
-  propertyAbbreviation?: string;
+  propertyAbbreviation: string;
   reference: string;
-  date: Date;
-  description?: string;
+  date: string;
+  description: string | null;
   amount: number;
 };
 
@@ -171,41 +182,77 @@ export type TBankAccountPayment = {
   paymentId: string;
   type: BankAccountPaymentType;
   date: string;
-  reference: string;
+  reference: string | null;
   method: BankAccountMethod;
-  payTo?: string;
+  payTo: string;
   recipientId: string;
   recipientType: BankAccountPaymentRecipientType;
+  /** Only returned for payments made to a vendor. */
+  vendorAbbreviation?: string | null;
+  /** Only returned for payments made to a vendor. */
+  vendorName?: string;
   amount: number;
-  memo?: string;
+  memo: string | null;
   status: BankAccountPaymentStatus;
-  clearedDate?: Date;
-  voidedDate?: Date;
-  printedDate?: Date;
-  postedDate?: Date;
-  payables?: TBankAccountPaymentPayable[];
+  clearedDate: string | null;
+  voidedDate: string | null;
+  printedDate: string | null;
+  postedDate: string;
+  payables: TBankAccountPaymentPayable[];
 };
 
 export type TBankAccountPaymentResponse = {
   bankAccountId: string;
   accountName: string;
   accountNumber: string;
-  payments?: TBankAccountPayment[];
+  payments: TBankAccountPayment[];
 };
 
+/**
+ * A row of GET /Transactions/Ledger.
+ *
+ * Note: /Transactions/DepositLedger returns a different shape — see
+ * {@link TDepositLedgerResponse}.
+ */
 export type TLedgerResponse = {
   transactionId: string;
-  date: Date;
+  date: string;
+  type: TransactionCategoryType;
+  /** Null on transactions that carry no transaction category (e.g. reversals). */
+  category: TLedgerResponseCategory | null;
+  description: string;
+  amount: number;
+  /** Present on payment-style rows only. */
+  reference?: string;
+  /** Present on payment-style rows only. */
+  method?: string;
+  /** Only present when the transaction has been reversed. */
+  dateReversed?: string;
+};
+
+/**
+ * A row of GET /Transactions/DepositLedger. Unlike {@link TLedgerResponse} it
+ * carries `billingAccountId`, always carries a `category`, and never returns
+ * `reference`.
+ */
+export type TDepositLedgerResponse = {
+  transactionId: string;
+  billingAccountId: string;
+  date: string;
   type: TransactionCategoryType;
   category: TLedgerResponseCategory;
-  description?: string;
+  description: string;
   amount: number;
+  /** Present on payment-style rows only. */
+  method?: string;
+  /** Only present when the transaction has been reversed. */
+  dateReversed?: string;
 };
 
 export type TLedgerResponseCategory = {
   transactionCategoryId: string;
   name: string;
-  abbreviation?: string;
+  abbreviation: string;
 };
 
 export type TReceivableResponse = {
@@ -223,7 +270,7 @@ export type TReceivableResponse = {
 
 export type TReceivableResponseTransaction = {
   transactionId: string;
-  date: Date;
+  date: string;
   type: TransactionCategoryType;
   category: TLedgerResponseCategory;
   amount: number;
@@ -278,6 +325,14 @@ export type TInvoiceLineItem = {
   is1099Reportable: boolean;
 };
 
+/**
+ * A row of GET /Invoices.
+ *
+ * Note: the profiled credentials could not reach /Invoices, so optionality here
+ * is unverified against a live response. The date fields are typed `string`
+ * because this connector performs no date deserialization — every response date
+ * arrives as the raw JSON string ResMan sent.
+ */
 export type TInvoiceResponse = {
   invoiceId: string;
   number: string;
@@ -287,28 +342,17 @@ export type TInvoiceResponse = {
   vendorAbbreviation?: string;
   expenseTypeId: string;
   expenseType: string;
-  invoiceDate?: Date;
-  receivedDate?: Date;
-  accountingDate?: Date;
-  dueDate?: Date;
-  holdDate?: Date;
+  invoiceDate?: string;
+  receivedDate?: string;
+  accountingDate?: string;
+  dueDate?: string;
+  holdDate?: string;
   description?: string;
   total: number;
   amountPaid: number;
   isCredit: boolean;
   postingPersonId?: string;
   postingPerson?: string;
-  lastModified: Date;
+  lastModified: string;
   lineItems?: TInvoiceLineItem[];
-};
-
-export type TBankAccountResponse = {
-  bankAccountId: string;
-  propertyId?: string;
-  name?: string;
-  accountNumber?: string;
-  routingNumber?: string;
-  accountType?: string;
-  glAccount?: TTransactionGLAccount;
-  isActive?: boolean;
 };

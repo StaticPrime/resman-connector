@@ -21,49 +21,73 @@ export type TLeaseTransfer = {
   unitNumber: string;
 };
 
+/**
+ * A forwarding address as returned on each person of `GET /Leasing/MoveOuts`.
+ * Every member is nullable — the object is always present on a move-out person
+ * even when nothing has been captured yet.
+ */
+export type TForwardingAddress = {
+  streetAddress: string | null;
+  city: string | null;
+  state: string | null;
+  zipCode: string | null;
+  country: string | null;
+};
+
 export type TLeasePerson = {
   personId: string;
   firstName: string;
-  middleName?: string;
+  middleName: string | null;
   lastName: string;
-  email?: string;
-  phone?: string;
-  phoneType?: string;
-  householdStatus?: string;
+  email: string | null;
+  phone: string | null;
+  phoneType: string | null;
+  householdStatus: string;
   residencyStatus: ResidencyStatus;
   isMainContact: boolean;
   isHeadOfHousehold: boolean;
   isLeaseSigner: boolean;
-  isGrantor: boolean;
+  isGuarantor: boolean;
   isDependent: boolean;
   isExcludedFromOccupancy: boolean;
-  moveInDate?: Date;
-  moveOutDate?: Date;
-  moveOutReason?: string;
-  lastModified: Date;
+  /** ISO date string, not a `Date` — this connector does not deserialize dates. */
+  moveInDate: string;
+  moveOutDate: string | null;
+  moveOutReason: string | null;
+  lastModified: string;
+  /**
+   * Only returned by `GET /Leasing/MoveOuts`, where it is present on every
+   * person (all five members may still be `null`). Never returned by
+   * `GET /Leasing/Leases`, which is why it is optional on this shared type.
+   */
+  forwardingAddress?: TForwardingAddress;
 };
 
 export type TLeaseHistory = {
   leaseId: string;
   status: LeaseStatus;
-  applicationDate?: Date;
-  signedDate?: Date;
-  startDate?: Date;
-  endDate?: Date;
+  applicationDate: string;
+  signedDate: string | null;
+  startDate: string;
+  endDate: string;
   rent: number;
   recurringRentConcessions: number;
   otherConcessions: number;
   otherCharges: number;
-  dateCreated: Date;
+  dateCreated: string;
 };
 
-export type TForwardingAddress = {
-  streetAddress: string;
-  city: string;
-  state: string;
-  zipCode: string;
-};
-
+/**
+ * Shared shape for `GET /Leasing/Leases` and `GET /Leasing/MoveOuts`.
+ * All date fields arrive as strings on the wire and are never converted.
+ *
+ * Members that only one of the two endpoints returns are declared optional so
+ * the type stays truthful for both; see {@link TLeaseResponse.history}.
+ *
+ * Note: `forwardingAddress` used to be declared here, but the live payload
+ * carries it on each entry of {@link TLeaseResponse.people} (move-outs only),
+ * never on the lease itself. It now lives on {@link TLeasePerson}.
+ */
 export type TLeaseResponse = {
   propertyId: string;
   billingAccountId: string;
@@ -71,31 +95,35 @@ export type TLeaseResponse = {
   unitNumber: string;
   unitTypeId: string;
   unitTypeName: string;
-  prospectId?: string;
-  prospectSourceId?: string;
-  prospectSourceName?: string;
+  prospectId: string;
+  prospectSourceId: string;
+  prospectSourceName: string;
   leaseId: string;
   leaseStatus: LeaseStatus;
-  leasingAgentPersonId?: string;
-  leasingAgentName?: string;
-  leaseStartDate: Date;
-  leaseEndDate: Date;
-  applicationDate?: Date;
-  approvalDate?: Date;
-  denialDate?: Date;
-  cancellationDate?: Date;
-  leaseSignedDate?: Date;
-  scheduledMoveInDate?: Date;
-  moveInDate?: Date;
-  noticeToVacateDate?: Date;
-  scheduledMoveOutDate?: Date;
-  moveOutDate?: Date;
-  moveOutReconciliationDate?: Date;
-  transferredTo?: TLeaseTransfer;
-  lastModified: Date;
-  people?: TLeasePerson[];
+  leasingAgentPersonId: string;
+  leasingAgentName: string;
+  leaseStartDate: string;
+  leaseEndDate: string;
+  applicationDate: string;
+  approvalDate: string | null;
+  denialDate: string | null;
+  cancellationDate: string | null;
+  leaseSignedDate: string | null;
+  scheduledMoveInDate: string;
+  moveInDate: string | null;
+  noticeToVacateDate: string | null;
+  scheduledMoveOutDate: string | null;
+  moveOutDate: string | null;
+  moveOutReconciliationDate: string | null;
+  transferredTo: TLeaseTransfer | null;
+  lastModified: string;
+  people: TLeasePerson[];
+  /**
+   * Returned on every lease by `GET /Leasing/Leases` (gated by that endpoint's
+   * `includeLeaseHistory` flag), and never returned by `GET /Leasing/MoveOuts`,
+   * which is why it is optional on this shared type.
+   */
   history?: TLeaseHistory[];
-  forwardingAddress?: TForwardingAddress;
 };
 
 export type TTransactionCategory = {
@@ -128,10 +156,11 @@ export type TRecurringCharge = {
   type: ChargeType;
   description: string;
   amount: number;
-  startDate: Date;
-  endDate: Date;
-  splitLedger?: string;
-  rentableItem?: TRentableItem;
+  startDate: string;
+  endDate: string;
+  /** Always present, but only ever observed as `null` in live responses. */
+  splitLedger: string | null;
+  rentableItem: TRentableItem | null;
 };
 
 export type TRecurringChargeUngroupedResponse = {

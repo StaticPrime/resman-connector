@@ -1,6 +1,22 @@
 import { ResManConnector } from '../connector';
-import { TApiResponse, TRentableItemResponse, TRentableItemTypeResponse } from '../types';
+import {
+  TApiResponse,
+  TRentableItemAvailabilityResponse,
+  TRentableItemResponse,
+  TRentableItemTypeResponse,
+} from '../types';
 import { createSuccessResponse, createErrorResponse } from '../utils';
+
+/**
+ * GET /RentableItems as ResMan actually returns it. The lease id arrives as
+ * `leaseID`; everything else already matches {@link TRentableItemResponse}.
+ */
+type TRentableItemWire = Omit<TRentableItemResponse, 'leaseId'> & { leaseID: string | null };
+
+function normaliseRentableItem(item: TRentableItemWire): TRentableItemResponse {
+  const { leaseID, ...rest } = item;
+  return { ...rest, leaseId: leaseID ?? null };
+}
 
 /**
  * Rentable Items Modules
@@ -10,29 +26,56 @@ export class RentableItemsModules {
   constructor(private connector: ResManConnector) {}
 
   /**
-   * Get rentable items
+   * Get every rentable item on a property, with its occupancy.
    * GET /RentableItems
+   *
+   * Each item carries `isOccupied` and, when occupied, `leaseId` — a direct
+   * item-to-lease association. For availability data (`status`, `moveInDate`,
+   * `dateAvailable`) use {@link RentableItemsModules.getRentableItemAvailability}
+   * instead; the two endpoints return genuinely different shapes.
+   *
    * @param propertyId The ID of the property
-   * @param onlyAvailable Whether to only return available rentable items
    * @returns List of rentable items
    */
   public async getRentableItems({
     propertyId,
-    onlyAvailable,
   }: {
     propertyId: string;
-    onlyAvailable: boolean;
   }): Promise<TApiResponse<TRentableItemResponse[]>> {
     return this.connector
-      .get<{ rentableItems: TRentableItemResponse[] }>(
-        onlyAvailable ? '/RentableItems/Availability' : '/RentableItems',
-        {
-          params: {
-            propertyId,
-          },
-        }
+      .get<{ rentableItems: TRentableItemWire[] }>('/RentableItems', {
+        params: {
+          propertyId,
+        },
+      })
+      .then((response) =>
+        createSuccessResponse((response.data.rentableItems ?? []).map(normaliseRentableItem))
       )
-      .then((response) => createSuccessResponse(response.data.rentableItems))
+      .catch((error) => createErrorResponse(error));
+  }
+
+  /**
+   * Get rentable item availability for a property.
+   * GET /RentableItems/Availability
+   *
+   * Returns `status`, `moveInDate` and `dateAvailable`, but NOT `isOccupied` or
+   * `leaseId` — for those use {@link RentableItemsModules.getRentableItems}.
+   *
+   * @param propertyId The ID of the property
+   * @returns List of rentable item availability records
+   */
+  public async getRentableItemAvailability({
+    propertyId,
+  }: {
+    propertyId: string;
+  }): Promise<TApiResponse<TRentableItemAvailabilityResponse[]>> {
+    return this.connector
+      .get<{ rentableItems: TRentableItemAvailabilityResponse[] }>('/RentableItems/Availability', {
+        params: {
+          propertyId,
+        },
+      })
+      .then((response) => createSuccessResponse(response.data.rentableItems ?? []))
       .catch((error) => createErrorResponse(error));
   }
 

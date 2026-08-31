@@ -74,8 +74,8 @@ export type {
   TBankAccountPaymentPayable,
   TBankAccountPayment,
   TBankAccountPaymentResponse,
-  TBankAccountResponse,
   TLedgerResponse,
+  TDepositLedgerResponse,
   TLedgerResponseCategory,
   TReceivableResponse,
   TReceivableResponseTransaction,
@@ -123,6 +123,7 @@ export type {
   TPropertyGroupResponse,
   TAmenityUnit,
   TAmenityResponse,
+  TAmenityCharge,
   TBuildingResponse,
   TPropertyCharge,
   TPropertyChargesResponse,
@@ -141,6 +142,7 @@ export type {
 // Export rentable item types
 export type {
   TRentableItemResponse,
+  TRentableItemAvailabilityResponse,
   TRentableItemTypeCategory,
   TRentableItemTypeResponse,
 } from './types';

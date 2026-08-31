@@ -16,8 +16,10 @@ export enum PropertyType {
 }
 
 export type TPropertyCurrentPeriod = {
-  start: Date;
-  end: Date;
+  /** ISO date string. The API returns dates as strings; no deserialization is performed. */
+  start: string;
+  /** ISO date string. The API returns dates as strings; no deserialization is performed. */
+  end: string;
 };
 
 export type TPropertyManagementTeam = {
@@ -29,18 +31,23 @@ export type TPropertyManagementTeam = {
 
 export type TPropertyResponse = {
   propertyId: string;
-  abbreviation?: string;
+  abbreviation: string;
   name: string;
   type: PropertyType;
-  streetAddress?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
-  phone?: string;
-  email?: string;
-  manager?: string;
-  currentPeriod?: TPropertyCurrentPeriod;
-  managementTeam?: TPropertyManagementTeam[];
+  streetAddress: string;
+  city: string;
+  state: string;
+  zip: string;
+  phone: string;
+  email: string;
+  /** IANA/Windows time zone identifier for the property. */
+  timeZone: string;
+  /** Always null in observed responses. */
+  manager: string | null;
+  /** Default online application URL used for units at this property. */
+  defaultUnitApplicationUrl: string;
+  currentPeriod: TPropertyCurrentPeriod;
+  managementTeam: TPropertyManagementTeam[];
 };
 
 export type TPropertyGroupResponse = {
@@ -54,22 +61,33 @@ export type TAmenityUnit = {
   unitNumber: string;
 };
 
+export type TAmenityCharge = {
+  /** ISO date string for when the charge takes effect. */
+  date: string;
+  impactsMarketRent: boolean;
+  amount: number;
+  /** Always null in observed responses. */
+  category: string | null;
+};
+
 export type TAmenityResponse = {
   amenityId: string;
+  propertyId: string;
   name: string;
-  description?: string;
+  description: string;
   amenityTypeId: string;
   amenityTypeName: string;
   ilsMapping: string;
   availableForOnlineMarketing: boolean;
-  units?: TAmenityUnit[];
+  units: TAmenityUnit[];
+  charges: TAmenityCharge[];
 };
 
 export type TBuildingResponse = {
   buildingId: string;
   propertyId: string;
   name: string;
-  description?: string;
+  description: string;
   floors: number;
   totalUnits: number;
 };

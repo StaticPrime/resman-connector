@@ -5,13 +5,13 @@ import {
   TBalanceResponse,
   TApiResponse,
   TBankAccountPaymentResponse,
-  TBankAccountResponse,
   BankAccountMethod,
   TBillingAccountResponse,
   BillingAccountType,
   TransactionCategoryType,
   TTransactionCategoryResponse,
   TLedgerResponse,
+  TDepositLedgerResponse,
   TReceivableResponse,
   TDepositSummaryByCategoryResponse,
   InvoiceStatus,
@@ -23,6 +23,17 @@ import {
   createSuccessResponse,
   createErrorResponse,
 } from '../utils';
+
+/**
+ * GET /BillingAccounts as ResMan actually returns it. The lease id arrives as
+ * `leaseID`; everything else already matches {@link TBillingAccountResponse}.
+ */
+type TBillingAccountWire = Omit<TBillingAccountResponse, 'leaseId'> & { leaseID: string | null };
+
+function normaliseBillingAccount(account: TBillingAccountWire): TBillingAccountResponse {
+  const { leaseID, ...rest } = account;
+  return { ...rest, leaseId: leaseID };
+}
 
 /**
  * Accounting Modules
@@ -153,25 +164,6 @@ export class AccountingModules {
   }
 
   /**
-   * Get the bank accounts configured on a property
-   * GET /BankAccounts
-   * @param propertyId The ID of the property
-   * @returns List of bank accounts
-   */
-  public async getBankAccounts({
-    propertyId,
-  }: {
-    propertyId: string;
-  }): Promise<TApiResponse<TBankAccountResponse[]>> {
-    return this.connector
-      .get<{ bankAccounts: TBankAccountResponse[] }>('/BankAccounts', {
-        params: { propertyId },
-      })
-      .then((response) => createSuccessResponse(response.data.bankAccounts))
-      .catch((error) => createErrorResponse(error));
-  }
-
-  /**
    * Get billing accounts
    * GET /BillingAccounts
    * @param propertyId The ID of the property
@@ -206,7 +198,7 @@ export class AccountingModules {
     }
 
     return this.connector
-      .get<{ billingAccounts: TBillingAccountResponse[] }>('/BillingAccounts', {
+      .get<{ billingAccounts: TBillingAccountWire[] }>('/BillingAccounts', {
         params: {
           propertyId,
           modifiedSince: modifiedSince.toUTCString(),
@@ -216,7 +208,9 @@ export class AccountingModules {
           accountTypes: accountTypes ? accountTypes.join(',') : undefined,
         },
       })
-      .then((response) => createSuccessResponse(response.data.billingAccounts))
+      .then((response) =>
+        createSuccessResponse((response.data.billingAccounts ?? []).map(normaliseBillingAccount))
+      )
       .catch((error) => createErrorResponse(error));
   }
 
@@ -231,12 +225,34 @@ export class AccountingModules {
   }: {
     types: TransactionCategoryType[];
   }): Promise<TApiResponse<TTransactionCategoryResponse[]>> {
-    return this.connector
-      .get<{ categories: TTransactionCategoryResponse[] }>('/TransactionCategories', {
-        params: { types: types.join(',') },
-      })
-      .then((response) => createSuccessResponse(response.data.categories))
-      .catch((error) => createErrorResponse(error));
+    if (!types || types.length === 0) {
+      // The endpoint 500s when `types` is absent.
+      return createErrorResponse(new Error('At least one transaction category type is required'));
+    }
+
+    try {
+      // ResMan accepts exactly one type per request: a comma-joined list is
+      // accepted but returns an empty set, so each type is fetched separately
+      // and the results merged.
+      const responses = await Promise.all(
+        types.map((type) =>
+          this.connector.get<{ transactionCategories: TTransactionCategoryResponse[] }>(
+            '/TransactionCategories',
+            { params: { types: type } }
+          )
+        )
+      );
+
+      const byId = new Map<string, TTransactionCategoryResponse>();
+      for (const response of responses) {
+        for (const category of response.data.transactionCategories ?? []) {
+          byId.set(category.transactionCategoryId, category);
+        }
+      }
+      return createSuccessResponse([...byId.values()]);
+    } catch (error) {
+      return createErrorResponse(error as Error);
+    }
   }
 
   /**
@@ -269,7 +285,10 @@ export class AccountingModules {
           propertyId,
           billingAccountId,
           postedSince: postedSince.toUTCString(),
-          includeSplitLedger,
+          // ResMan names this flag `includeSplitLedgers` — that is the spelling it
+          // echoes back on the /Transactions/Ledger response. The singular form
+          // this connector used to send is not a parameter ResMan recognises.
+          includeSplitLedgers: includeSplitLedger,
         },
       })
       .then((response) => createSuccessResponse(response.data.transactions))
@@ -292,13 +311,13 @@ export class AccountingModules {
     propertyId: string;
     billingAccountId: string;
     postedSince: Date;
-  }): Promise<TApiResponse<TLedgerResponse[]>> {
+  }): Promise<TApiResponse<TDepositLedgerResponse[]>> {
     if (postedSince > new Date()) {
       return createErrorResponse(new Error('postedSince cannot be in the future.'));
     }
 
     return this.connector
-      .get<{ transactions: TLedgerResponse[] }>('/Transactions/DepositLedger', {
+      .get<{ transactions: TDepositLedgerResponse[] }>('/Transactions/DepositLedger', {
         params: { propertyId, billingAccountId, postedSince: postedSince.toUTCString() },
       })
       .then((response) => createSuccessResponse(response.data.transactions))

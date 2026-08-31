@@ -4,18 +4,40 @@ export type TProspectResponse = {
   prospectId: string;
   propertyId: string;
   mainPersonId: string;
-  lastModified: Date;
+  lastModified: string;
+  transactionSourceId: string;
   prospectSourceId: string;
   prospectSourceName: string;
   status: ProspectStatus;
-  firstContactMethod?: string;
-  firstContactDate?: Date;
-  lastContactDate?: Date;
-  lostDate?: Date;
-  lostReason?: string;
-  leasingAgent?: TProspectLeasingAgent;
+  firstContactMethod: string;
+  firstContactDate: string;
+  firstContactCommunicationLogId: string;
+  /**
+   * @deprecated Not observed in any live response.
+   */
+  lastContactDate?: string;
+  lostDate: string | null;
+  lostReason: string | null;
+  leasingAgent: TProspectLeasingAgent | null;
   people: TProspectPerson[];
-  communicationLog: TProspectCommunicationLog[];
+  /**
+   * ONLY present when `getProspects` is called with `includeCommunicationLog:
+   * true`. ResMan omits the key entirely otherwise — verified against the live
+   * API with the flag both set and unset.
+   */
+  communicationLog?: TProspectCommunicationLog[];
+  /**
+   * A field separate from {@link TProspectResponse.communicationLog}, always
+   * present on the response and unaffected by `includeCommunicationLog`.
+   *
+   * ResMan returned an explicit `null` for every prospect observed, so the
+   * element shape could not be determined. Typed permissively rather than as
+   * the literal `null` so a populated response does not break the type.
+   */
+  events: Record<string, unknown>[] | null;
+  /**
+   * Only present once the prospect has an application on file.
+   */
   lease?: TProspectLease;
 };
 
@@ -23,14 +45,15 @@ export type TProspectLease = {
   billingAccountId: string;
   leaseId: string;
   status: LeaseStatus;
+  unitId: string;
   unitNumber: string;
-  applicationDate: Date;
-  approvalDate?: Date;
-  denialDate?: Date;
-  cancellationDate?: Date;
-  leaseSignedDate?: Date;
-  scheduledMoveInDate: Date;
-  moveInDate?: Date;
+  applicationDate: string;
+  approvalDate: string | null;
+  denialDate: string | null;
+  cancellationDate: string | null;
+  leaseSignedDate: string | null;
+  scheduledMoveInDate: string;
+  moveInDate: string | null;
 };
 
 export enum ProspectStatus {
@@ -41,6 +64,7 @@ export enum ProspectStatus {
 }
 
 export type TProspectLeasingAgent = {
+  agentId: string;
   personId: string;
   firstName: string;
   lastName: string;
@@ -49,29 +73,29 @@ export type TProspectLeasingAgent = {
 export type TProspectPerson = {
   personId: string;
   firstName: string;
-  middleName?: null;
+  middleName: string | null;
   lastName: string;
-  email?: string;
-  phone?: string;
-  phoneType?: string;
-  householdStatus?: string;
+  email: string | null;
+  phone: string | null;
+  phoneType: string | null;
+  householdStatus: string | null;
   isMainContact: boolean;
-  isHeadOfHousehold: boolean;
-  isLeaseSigner: boolean;
-  isGuarantor: boolean;
-  isDependent: boolean;
-  isExcludedFromOccupancy: boolean;
+  isHeadOfHousehold: boolean | null;
+  isLeaseSigner: boolean | null;
+  isGuarantor: boolean | null;
+  isDependent: boolean | null;
+  isExcludedFromOccupancy: boolean | null;
 };
 
 export type TProspectCommunicationLog = {
   communicationLogId: string;
-  date: Date;
+  date: string;
   interactionType: string;
   contactType: string;
-  description?: string;
-  note?: string;
+  description: string | null;
+  note: string | null;
   employee?: TProspectLeasingAgent;
-  timestamp: Date;
+  timestamp: string;
 };
 
 export type TProspectSourceResponse = {

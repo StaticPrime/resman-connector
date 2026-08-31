@@ -5,16 +5,21 @@ export enum EmployeeStatus {
 
 export type TEmployeeResponse = {
   personId: string;
-  userId: string;
+  /** Null for employees who have no ResMan login. */
+  userId: string | null;
   firstName: string;
   lastName: string;
-  preferredName?: string;
-  phone?: string;
-  email?: string;
-  securityGroup: string;
+  preferredName: string;
+  phone: string | null;
+  email: string | null;
+  securityGroup: string | null;
   isLeasing: boolean;
   isMaintenance: boolean;
   isCorporate: boolean;
-  terminationDate?: Date;
-  propertyIds?: string[];
+  /**
+   * ISO date string, or null while the employee is still active. Returned as a
+   * raw JSON string — this connector performs no date deserialization.
+   */
+  terminationDate: string | null;
+  propertyIds: string[];
 };

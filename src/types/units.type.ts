@@ -31,18 +31,21 @@ export type TUnitResponse = {
   unitNumber: string;
   unitTypeId: string;
   unitType: string;
-  buildingId?: string;
-  building?: string;
-  floor?: number;
+  buildingId: string;
+  building: string;
+  /** The API returns this as a string (e.g. '1'), not a number. */
+  floor: string;
   squareFeet: number;
-  streetAddress?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  zip: string;
   excludedFromOccupancy: boolean;
   availableForOnlineMarketing: boolean;
   marketRent: number;
   amenities: TUnitAmenity[];
+  isAffordableUnit: boolean;
+  isHoldingUnit: boolean;
 };
 
 export type TUnitAmenity = {
@@ -64,16 +67,21 @@ export enum UnitStatus {
 export type TApplicantLease = {
   billingAccountId: string;
   leaseId: string;
-  applicationDate: Date;
-  moveInDate?: Date;
+  /** ISO date string; this connector performs no date deserialization. */
+  applicationDate: string;
+  /** ISO date string; this connector performs no date deserialization. */
+  moveInDate: string;
 };
 
 export type TUnitOccupyingLease = {
   billingAccountId: string;
   leaseId: string;
-  moveInDate: Date;
-  noticeToVacateDate?: Date;
-  moveOutDate?: Date;
+  /** ISO date string; this connector performs no date deserialization. */
+  moveInDate: string;
+  /** ISO date string, or null when no notice has been given. */
+  noticeToVacateDate: string | null;
+  /** ISO date string, or null when the lease has not moved out. */
+  moveOutDate: string | null;
 };
 
 export enum UnitVacancyStatus {
@@ -89,33 +97,41 @@ export type TUnitAvailabilityResponse = {
   propertyId: string;
   unitId: string;
   number: string;
-  floor: number;
+  /** The API returns this as a string (e.g. '1'), not a number. */
+  floor: string;
   squareFeet: number;
   unitTypeId: string;
   unitTypeName: string;
-  unitTypeMarketingName?: string;
-  availableForOnlineMarketing?: boolean;
-  buildingId?: string;
-  buildingName?: string;
-  streetAddress?: string;
-  city?: string;
-  state?: string;
-  zip?: string;
+  /**
+   * Always observed as null across every sampled unit; typed as a nullable string
+   * because the field is a marketing name when populated.
+   */
+  unitTypeMarketingName: string | null;
+  availableForOnlineMarketing: boolean;
+  buildingId: string;
+  buildingName: string;
+  streetAddress: string;
+  city: string;
+  state: string;
+  zip: string;
   status: UnitStatus;
-  statusDate?: Date;
-  dateAvailable?: Date;
+  /** ISO date string; this connector performs no date deserialization. */
+  statusDate: string;
+  /** ISO date string, or null when the unit has no availability date. */
+  dateAvailable: string | null;
   vacancyStatus: UnitVacancyStatus;
   excludedFromOccupancy: boolean;
+  marketRent: number;
   amenities: TUnitAmenity[];
-  occupyingLease?: TUnitOccupyingLease;
-  applicantLease?: TApplicantLease;
+  occupyingLease: TUnitOccupyingLease | null;
+  applicantLease: TApplicantLease | null;
 };
 
 export type TUnitTypeResponse = {
   unitTypeId: string;
   propertyId: string;
   name: string;
-  description?: string;
+  description: string;
   bedrooms: number;
   bathrooms: number;
   squareFootage: number;
@@ -131,6 +147,11 @@ export enum UnitChargeClass {
   AMENITY = 'Amenity',
 }
 
+/**
+ * Shape of a GET /UnitCharges row. This endpoint returned no profileable payload,
+ * so every field below is best-effort and unverified against a live response;
+ * use `raw` when a field is missing.
+ */
 export type TUnitCharge = {
   unitId?: string;
   unitTypeId?: string;
@@ -150,7 +171,9 @@ export type TUnitCharge = {
   rentableItemTypeName?: string;
   amenityId?: string;
   amenityName?: string;
-  startDate?: Date;
-  endDate?: Date;
+  /** ISO date string; this connector performs no date deserialization. */
+  startDate?: string;
+  /** ISO date string; this connector performs no date deserialization. */
+  endDate?: string;
   raw?: Record<string, unknown>;
 };

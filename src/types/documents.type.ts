@@ -9,7 +9,11 @@ export enum DocumentType {
 export type TSingleDocumentResponse = {
   documentId: string;
   uri: string;
-  uriExpiration: Date;
+  /**
+   * When the `uri` stops working. Returned as a raw JSON string — this
+   * connector performs no date deserialization.
+   */
+  uriExpiration: string;
 };
 
 export type TMultipleDocumentResponse = {
@@ -18,7 +22,13 @@ export type TMultipleDocumentResponse = {
   name: string;
   size: number;
   fileType: string;
-  dateAttached: Date;
+  /**
+   * Returned as a raw JSON string — this connector performs no date
+   * deserialization.
+   */
+  dateAttached: string;
+  /** ResMan's sub-classification of the document within its {@link DocumentType}. */
+  subType?: string;
 };
 
 export type TAddDocumentLinkResponse = {

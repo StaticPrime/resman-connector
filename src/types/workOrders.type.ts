@@ -12,32 +12,38 @@ export enum WorkOrderStatus {
 export type TWorkOrderResponse = {
   workOrderId: string;
   propertyId: string;
-  assignedTo?: string;
-  assignedToPersonId?: string;
+  assignedTo: string;
+  assignedToPersonId: string;
   number: number;
-  reportedDate?: Date;
-  dueDate?: Date;
-  reportedBy?: string;
+  /** ISO date string. The API returns dates as strings; no deserialization is performed. */
+  reportedDate: string;
+  /** ISO date string. The API returns dates as strings; no deserialization is performed. */
+  dueDate: string;
+  reportedBy: string | null;
+  /** Absent on some work orders (observed on ~62% of responses). */
   reportedByPersonId?: string;
   description: string;
   category: string;
   categoryId: string;
   isMakeReady: boolean;
-  location?: TWorkOrderLocation;
-  areas?: string[];
-  pets?: string[];
-  appointment: WorkOrderAppointment;
-  phone?: string;
-  notes?: string;
+  location: TWorkOrderLocation | null;
+  areas: string[] | null;
+  pets: string[] | null;
+  appointment: WorkOrderAppointment | null;
+  phone: string | null;
+  email: string | null;
+  notes: string | null;
   status: WorkOrderStatus;
   priority: WorkOrderPriority;
   cost: number;
-  completedBy?: string;
+  completedBy: string | null;
   completedByPersonId?: string;
-  completedNotes?: string;
-  completedDate?: Date;
-  documents?: TWorkOrderDocument[];
-  lastModified: Date;
+  completedNotes: string | null;
+  /** ISO date string. The API returns dates as strings; no deserialization is performed. */
+  completedDate?: string;
+  documents: TWorkOrderDocument[];
+  /** ISO date string. The API returns dates as strings; no deserialization is performed. */
+  lastModified: string;
 };
 
 export enum WorkOrderAppointment {
@@ -53,6 +59,10 @@ export enum WorkOrderPriority {
   HIGH = 'High',
 }
 
+/**
+ * Location nested on a work order. ResMan returns the identifier as `id` here,
+ * unlike the flattened GET /WorkOrders/Locations list.
+ */
 export type TWorkOrderLocation = {
   id: string;
   name: string;
@@ -108,8 +118,12 @@ export type TWorkOrderCategoryResponse = {
   name: string;
 };
 
+/**
+ * Location from GET /WorkOrders/Locations. ResMan returns the identifier as `id`
+ * on the wire, matching the location nested on a work order.
+ */
 export type TWorkOrderLocationResponse = {
-  locationId: string;
+  id: string;
   name: string;
   type: string;
 };
