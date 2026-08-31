@@ -5,6 +5,7 @@ import {
   TBalanceResponse,
   TApiResponse,
   TBankAccountPaymentResponse,
+  TBankAccountResponse,
   BankAccountMethod,
   TBillingAccountResponse,
   BillingAccountType,
@@ -152,6 +153,25 @@ export class AccountingModules {
   }
 
   /**
+   * Get the bank accounts configured on a property
+   * GET /BankAccounts
+   * @param propertyId The ID of the property
+   * @returns List of bank accounts
+   */
+  public async getBankAccounts({
+    propertyId,
+  }: {
+    propertyId: string;
+  }): Promise<TApiResponse<TBankAccountResponse[]>> {
+    return this.connector
+      .get<{ bankAccounts: TBankAccountResponse[] }>('/BankAccounts', {
+        params: { propertyId },
+      })
+      .then((response) => createSuccessResponse(response.data.bankAccounts))
+      .catch((error) => createErrorResponse(error));
+  }
+
+  /**
    * Get billing accounts
    * GET /BillingAccounts
    * @param propertyId The ID of the property
@@ -202,7 +222,7 @@ export class AccountingModules {
 
   /**
    * Get transaction categories for the account
-   * GET /Account/TransactionCategories
+   * GET /TransactionCategories
    * @param types Array of transaction category types
    * @returns List of transaction categories
    */

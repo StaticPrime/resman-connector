@@ -73,3 +73,9 @@ export type TProspectCommunicationLog = {
   employee?: TProspectLeasingAgent;
   timestamp: Date;
 };
+
+export type TProspectSourceResponse = {
+  prospectSourceId: string;
+  name: string;
+  isActive?: boolean;
+};

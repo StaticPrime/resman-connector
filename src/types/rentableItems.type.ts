@@ -27,10 +27,11 @@ export type TRentableItemTypeResponse = {
   rentableItemTypeId: string;
   name: string;
   description?: string;
-  marketinDescription?: string;
+  marketingDescription?: string;
   squareFootage?: number;
-  includeinOnlineApplication?: boolean;
+  includeInOnlineApplication?: boolean;
   category?: TRentableItemTypeCategory;
   amount: number;
   rentabbleItemCount?: number;
+  rentableItemCount?: number;
 };

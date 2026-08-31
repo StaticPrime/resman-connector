@@ -3,6 +3,8 @@ import {
   TAmenityResponse,
   TApiResponse,
   TBuildingResponse,
+  TPropertyCharge,
+  TPropertyChargesResponse,
   TPropertyGroupResponse,
   TPropertyResponse,
 } from '../types';
@@ -54,6 +56,35 @@ export class PropertiesModules {
         params: { propertyId },
       })
       .then((response) => createSuccessResponse(response.data.amenities))
+      .catch((error) => createErrorResponse(error));
+  }
+
+  /**
+   * Get the charge catalog configured on a property
+   * GET /PropertyCharges
+   * @param propertyId The ID of the property
+   * @param isEnabled Only return charges with this enabled state
+   * @param isRequired Only return charges with this required state
+   * @returns List of property charges
+   */
+  public async getPropertyCharges({
+    propertyId,
+    isEnabled,
+    isRequired,
+  }: {
+    propertyId: string;
+    isEnabled?: boolean;
+    isRequired?: boolean;
+  }): Promise<TApiResponse<TPropertyCharge[]>> {
+    return this.connector
+      .get<TPropertyChargesResponse>('/PropertyCharges', {
+        params: {
+          PropertyId: propertyId,
+          IsEnabled: isEnabled,
+          IsRequired: isRequired,
+        },
+      })
+      .then((response) => createSuccessResponse(response.data.propertyCharges))
       .catch((error) => createErrorResponse(error));
   }
 

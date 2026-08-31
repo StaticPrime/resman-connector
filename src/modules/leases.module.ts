@@ -47,16 +47,16 @@ export class LeasesModules {
    * @param moveInDateFrom The date to filter leases by
    * @param moveInDateTo The date to filter leases by
    * @param isNoticeToVacateGiven Whether the notice to vacate is given
-   * @param noticeToVacateGivenDateFrom The date to filter leases by
-   * @param noticeToVacateGivenDateTo The date to filter leases by
+   * @param noticeToVacateDateFrom The date to filter leases by
+   * @param noticeToVacateDateTo The date to filter leases by
    * @param scheduledMoveOutDateFrom The date to filter leases by
    * @param scheduledMoveOutDateTo The date to filter leases by
    * @param isMovedOut Whether the lease is moved out
    * @param moveOutDateFrom The date to filter leases by
    * @param moveOutDateTo The date to filter leases by
-   * @param isMoveOutReconcillationComplete Whether the move out reconciliation is complete
-   * @param moveOutReconcillationDateFrom The date to filter leases by
-   * @param moveOutReconcillationDateTo The date to filter leases by
+   * @param isMoveOutReconciliationComplete Whether the move out reconciliation is complete
+   * @param moveOutReconciliationDateFrom The date to filter leases by
+   * @param moveOutReconciliationDateTo The date to filter leases by
    * @returns List of Leases
    */
   public async getLeases({
@@ -84,16 +84,16 @@ export class LeasesModules {
     moveInDateFrom,
     moveInDateTo,
     isNoticeToVacateGiven,
-    noticeToVacateGivenDateFrom,
-    noticeToVacateGivenDateTo,
+    noticeToVacateDateFrom,
+    noticeToVacateDateTo,
     scheduledMoveOutDateFrom,
     scheduledMoveOutDateTo,
     isMovedOut,
     moveOutDateFrom,
     moveOutDateTo,
-    isMoveOutReconcillationComplete,
-    moveOutReconcillationDateFrom,
-    moveOutReconcillationDateTo,
+    isMoveOutReconciliationComplete,
+    moveOutReconciliationDateFrom,
+    moveOutReconciliationDateTo,
   }: {
     propertyId: string;
     includeLeaseHistory: boolean;
@@ -119,17 +119,25 @@ export class LeasesModules {
     moveInDateFrom?: Date;
     moveInDateTo?: Date;
     isNoticeToVacateGiven?: boolean;
-    noticeToVacateGivenDateFrom?: Date;
-    noticeToVacateGivenDateTo?: Date;
+    noticeToVacateDateFrom?: Date;
+    noticeToVacateDateTo?: Date;
     scheduledMoveOutDateFrom?: Date;
     scheduledMoveOutDateTo?: Date;
     isMovedOut?: boolean;
     moveOutDateFrom?: Date;
     moveOutDateTo?: Date;
-    isMoveOutReconcillationComplete?: boolean;
-    moveOutReconcillationDateFrom?: Date;
-    moveOutReconcillationDateTo?: Date;
+    isMoveOutReconciliationComplete?: boolean;
+    moveOutReconciliationDateFrom?: Date;
+    moveOutReconciliationDateTo?: Date;
   }): Promise<TApiResponse<TLeaseResponse[]>> {
+    // Coalesce the deprecated misspelled aliases onto the documented spellings.
+    const noticeToVacateFrom = noticeToVacateDateFrom ?? noticeToVacateDateTo;
+    const noticeToVacateTo = noticeToVacateDateTo ?? noticeToVacateDateTo;
+    const reconciliationFrom = moveOutReconciliationDateFrom ?? moveOutReconciliationDateTo;
+    const reconciliationTo = moveOutReconciliationDateTo ?? moveOutReconciliationDateTo;
+    const isReconciliationComplete =
+      isMoveOutReconciliationComplete ?? isMoveOutReconciliationComplete;
+
     if (modifiedSince > new Date()) {
       return createErrorResponse(new Error('modifiedSince cannot be in the future.'));
     }
@@ -143,10 +151,10 @@ export class LeasesModules {
       { start: leaseSignedDateFrom, end: leaseSignedDateTo },
       { start: scheduledMoveInDateFrom, end: scheduledMoveInDateTo },
       { start: moveInDateFrom, end: moveInDateTo },
-      { start: noticeToVacateGivenDateFrom, end: noticeToVacateGivenDateTo },
+      { start: noticeToVacateFrom, end: noticeToVacateTo },
       { start: scheduledMoveOutDateFrom, end: scheduledMoveOutDateTo },
       { start: moveOutDateFrom, end: moveOutDateTo },
-      { start: moveOutReconcillationDateFrom, end: moveOutReconcillationDateTo },
+      { start: reconciliationFrom, end: reconciliationTo },
     ];
 
     for (const { start, end } of datePairsToValidate) {
@@ -187,12 +195,8 @@ export class LeasesModules {
           moveInDateFrom: moveInDateFrom ? formatDate(moveInDateFrom) : undefined,
           moveInDateTo: moveInDateTo ? formatDate(moveInDateTo) : undefined,
           isNoticeToVacateGiven,
-          noticeToVacateGivenDateFrom: noticeToVacateGivenDateFrom
-            ? formatDate(noticeToVacateGivenDateFrom)
-            : undefined,
-          noticeToVacateGivenDateTo: noticeToVacateGivenDateTo
-            ? formatDate(noticeToVacateGivenDateTo)
-            : undefined,
+          noticeToVacateDateFrom: noticeToVacateFrom ? formatDate(noticeToVacateFrom) : undefined,
+          noticeToVacateDateTo: noticeToVacateTo ? formatDate(noticeToVacateTo) : undefined,
           scheduledMoveOutDateFrom: scheduledMoveOutDateFrom
             ? formatDate(scheduledMoveOutDateFrom)
             : undefined,
@@ -202,13 +206,11 @@ export class LeasesModules {
           isMovedOut,
           moveOutDateFrom: moveOutDateFrom ? formatDate(moveOutDateFrom) : undefined,
           moveOutDateTo: moveOutDateTo ? formatDate(moveOutDateTo) : undefined,
-          isMoveOutReconcillationComplete,
-          moveOutReconcillationDateFrom: moveOutReconcillationDateFrom
-            ? formatDate(moveOutReconcillationDateFrom)
+          isMoveOutReconciliationComplete: isReconciliationComplete,
+          moveOutReconciliationDateFrom: reconciliationFrom
+            ? formatDate(reconciliationFrom)
             : undefined,
-          moveOutReconcillationDateTo: moveOutReconcillationDateTo
-            ? formatDate(moveOutReconcillationDateTo)
-            : undefined,
+          moveOutReconciliationDateTo: reconciliationTo ? formatDate(reconciliationTo) : undefined,
         },
       })
       .then((response) => createSuccessResponse(response.data.leases))

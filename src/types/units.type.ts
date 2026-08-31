@@ -94,7 +94,7 @@ export type TUnitAvailabilityResponse = {
   unitTypeId: string;
   unitTypeName: string;
   unitTypeMarketingName?: string;
-  availableForOnlinemarketing: boolean;
+  availableForOnlineMarketing?: boolean;
   buildingId?: string;
   buildingName?: string;
   streetAddress?: string;
@@ -122,4 +122,35 @@ export type TUnitTypeResponse = {
   maximumOccupancy: number;
   marketRent: number;
   requiredDeposit: number;
+};
+
+export enum UnitChargeClass {
+  RECURRING = 'Recurring',
+  ONE_TIME = 'OneTime',
+  RENTABLE_ITEM = 'RentableItem',
+  AMENITY = 'Amenity',
+}
+
+export type TUnitCharge = {
+  unitId?: string;
+  unitTypeId?: string;
+  transactionCategoryId?: string;
+  chargeName?: string;
+  chargeCategory?: string;
+  chargeClass?: UnitChargeClass | string;
+  amount?: number;
+  currency?: string;
+  frequency?: string;
+  isRecurring?: boolean;
+  isRequired?: boolean;
+  isEnabled?: boolean;
+  rentableItemId?: string;
+  rentableItemName?: string;
+  rentableItemTypeId?: string;
+  rentableItemTypeName?: string;
+  amenityId?: string;
+  amenityName?: string;
+  startDate?: Date;
+  endDate?: Date;
+  raw?: Record<string, unknown>;
 };

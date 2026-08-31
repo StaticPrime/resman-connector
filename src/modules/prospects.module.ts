@@ -1,5 +1,5 @@
 import { ResManConnector } from '../connector';
-import { TApiResponse, TProspectResponse } from '../types';
+import { TApiResponse, TProspectResponse, TProspectSourceResponse } from '../types';
 import { createSuccessResponse, createErrorResponse, validateStartAndEndDate } from '../utils';
 
 /**
@@ -61,6 +61,25 @@ export class ProspectsModules {
         },
       })
       .then((response) => createSuccessResponse(response.data.prospects))
+      .catch((error) => createErrorResponse(error));
+  }
+
+  /**
+   * Get the prospect sources configured on a property
+   * GET /ProspectSources
+   * @param propertyId The property ID
+   * @returns List of prospect sources
+   */
+  public async getProspectSources({
+    propertyId,
+  }: {
+    propertyId: string;
+  }): Promise<TApiResponse<TProspectSourceResponse[]>> {
+    return this.connector
+      .get<{ prospectSources: TProspectSourceResponse[] }>('/ProspectSources', {
+        params: { propertyId },
+      })
+      .then((response) => createSuccessResponse(response.data.prospectSources))
       .catch((error) => createErrorResponse(error));
   }
 }

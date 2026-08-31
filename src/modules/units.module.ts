@@ -8,6 +8,7 @@ import {
   TUnitResponse,
   TUnitAvailabilityResponse,
   TUnitTypeResponse,
+  TUnitCharge,
 } from '../types';
 import {
   formatDate,
@@ -25,8 +26,6 @@ export class UnitsModules {
 
   private validatePricing = (pricing: TUnitPricing[]) => {
     pricing.forEach((price) => {
-      if (!price.leaseTerm || !price.startDate || !price.endDate || !price.price)
-        throw new Error('leaseTerm, startDate, endDate, and price are required');
       if (!price.leaseTerm || !price.startDate || !price.endDate || !price.price)
         throw new Error('leaseTerm, startDate, endDate, and price are required');
       if (!Number.isInteger(price.leaseTerm) || !Number.isInteger(price.price))
@@ -200,6 +199,70 @@ export class UnitsModules {
     }
     return this.connector
       .patch<null>('/Units/DateAvailable', { propertyId, unitId, date: formatDate(date) })
+      .then(() => createSuccessResponse(null))
+      .catch((error) => createErrorResponse(error));
+  }
+
+  /**
+   * Get every charge associated with a unit
+   * GET /UnitCharges
+   * @param propertyId The ID of the property
+   * @param unitId The ID of the unit to scope to
+   * @returns List of unit charges
+   */
+  public async getUnitCharges({
+    propertyId,
+    unitId,
+  }: {
+    propertyId: string;
+    unitId?: string;
+  }): Promise<TApiResponse<TUnitCharge[]>> {
+    return this.connector
+      .get<{ unitCharges?: TUnitCharge[]; charges?: TUnitCharge[] }>('/UnitCharges', {
+        params: { propertyId, unitId },
+      })
+      .then((response) => {
+        // The response envelope key is undocumented; accept either spelling.
+        const charges = response.data.unitCharges ?? response.data.charges ?? [];
+        return createSuccessResponse(
+          charges.map((charge) => ({
+            ...charge,
+            raw: charge as unknown as Record<string, unknown>,
+          }))
+        );
+      })
+      .catch((error) => createErrorResponse(error));
+  }
+
+  /**
+   * POST /UnitTypes/MarketRent
+   * @param propertyId The ID of the property
+   * @param unitTypeId The ID of the unit type
+   * @param date The date of the market rent
+   * @param marketRent The market rent
+   * @returns Null
+   */
+  public async addUnitTypeMarketRent({
+    propertyId,
+    unitTypeId,
+    date,
+    marketRent,
+  }: {
+    propertyId: string;
+    unitTypeId: string;
+    date: Date;
+    marketRent: number;
+  }): Promise<TApiResponse<null>> {
+    if (date > new Date()) {
+      return createErrorResponse(new Error('date cannot be in the future'));
+    }
+    return this.connector
+      .post<null>('/UnitTypes/MarketRent', {
+        propertyId,
+        unitTypeId,
+        date: formatDate(date),
+        marketRent,
+      })
       .then(() => createSuccessResponse(null))
       .catch((error) => createErrorResponse(error));
   }

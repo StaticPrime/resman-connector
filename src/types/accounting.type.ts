@@ -86,7 +86,7 @@ export type TBillingAccountTransaction = {
   id: string;
   date: Date;
   type: string;
-  trasactionCategoryId: string;
+  transactionCategoryId?: string;
   description?: string;
   reference: string;
   amount: number;
@@ -112,7 +112,7 @@ export type TBillingAccountResponse = {
   householdStatus?: string;
   moveInDate?: Date;
   moveOutDate?: Date;
-  leaseID?: string;
+  leaseId?: string;
   leaseStatus?: string;
   leaseSignedDate?: Date;
   leaseStartDate?: Date;
@@ -300,4 +300,15 @@ export type TInvoiceResponse = {
   postingPerson?: string;
   lastModified: Date;
   lineItems?: TInvoiceLineItem[];
+};
+
+export type TBankAccountResponse = {
+  bankAccountId: string;
+  propertyId?: string;
+  name?: string;
+  accountNumber?: string;
+  routingNumber?: string;
+  accountType?: string;
+  glAccount?: TTransactionGLAccount;
+  isActive?: boolean;
 };

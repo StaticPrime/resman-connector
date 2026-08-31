@@ -90,7 +90,7 @@ export type TLeaseResponse = {
   noticeToVacateDate?: Date;
   scheduledMoveOutDate?: Date;
   moveOutDate?: Date;
-  moveOutReconcillationDate?: Date;
+  moveOutReconciliationDate?: Date;
   transferredTo?: TLeaseTransfer;
   lastModified: Date;
   people?: TLeasePerson[];

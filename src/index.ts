@@ -47,6 +47,7 @@ export {
   BankAccountPaymentStatus,
   BankAccountPaymentType,
   TransactionCategoryType,
+  UnitChargeClass,
   UnitStatus,
   UnitVacancyStatus,
   WorkOrderAppointment,
@@ -73,6 +74,7 @@ export type {
   TBankAccountPaymentPayable,
   TBankAccountPayment,
   TBankAccountPaymentResponse,
+  TBankAccountResponse,
   TLedgerResponse,
   TLedgerResponseCategory,
   TReceivableResponse,
@@ -84,7 +86,11 @@ export type {
 } from './types';
 
 // Export document types
-export type { TSingleDocumentResponse, TMultipleDocumentResponse } from './types';
+export type {
+  TSingleDocumentResponse,
+  TMultipleDocumentResponse,
+  TAddDocumentLinkResponse,
+} from './types';
 
 // Export employee types
 export type { TEmployeeResponse } from './types';
@@ -118,6 +124,9 @@ export type {
   TAmenityUnit,
   TAmenityResponse,
   TBuildingResponse,
+  TPropertyCharge,
+  TPropertyChargesResponse,
+  PropertyChargeFrequency,
 } from './types';
 
 // Export prospect types
@@ -126,6 +135,7 @@ export type {
   TProspectLeasingAgent,
   TProspectPerson,
   TProspectCommunicationLog,
+  TProspectSourceResponse,
 } from './types';
 
 // Export rentable item types
@@ -151,6 +161,7 @@ export type {
   TUnitOccupyingLease,
   TUnitAvailabilityResponse,
   TUnitTypeResponse,
+  TUnitCharge,
 } from './types';
 
 // Export vendor types

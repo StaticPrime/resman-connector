@@ -73,3 +73,27 @@ export type TBuildingResponse = {
   floors: number;
   totalUnits: number;
 };
+
+export type PropertyChargeFrequency = string;
+
+export type TPropertyCharge = {
+  transactionCategoryId: string;
+  chargeName: string;
+  chargeCategory?: string;
+  amount: number;
+  currency?: string;
+  frequency?: PropertyChargeFrequency;
+  isRequired: boolean;
+  isRecurring: boolean;
+  isEnabled: boolean;
+  isSituational?: boolean;
+  isRefundable?: boolean;
+  isThirdParty?: boolean;
+  isTaxable?: boolean;
+};
+
+export type TPropertyChargesResponse = {
+  propertyId: string;
+  accountId: string;
+  propertyCharges: TPropertyCharge[];
+};
